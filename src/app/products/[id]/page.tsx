@@ -1,0 +1,62 @@
+import Image from 'next/image';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+
+async function getProduct(id: string) {
+  const r = await fetch(`${API_BASE}/api/products/${id}`, { cache: 'no-store' });
+  if (!r.ok) throw new Error('Not found');
+  return r.json(); 
+}
+
+export default async function ProductDetail({ params }: { params: { id: string } }) {
+  const p = await getProduct(params.id);
+
+  return (
+    <main className="bg-neutral-950 min-h-screen text-white">
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        <h1 className="mb-4 text-4xl font-extrabold">{p.name}</h1>
+
+        <div className="grid gap-4 grid-cols-2">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
+            <Image src={p.imageUrl} alt={p.name} fill className="object-cover" unoptimized />
+            {!p.isAvailable && (
+              <div className="pointer-events-none absolute inset-0">
+                <span className=" absolute bottom-4 right-4  inline-flex items-center rounded-2xl px-4 py-2
+                                 text-white font-semibold bg-rose-500/95 shadow-lg ring-1 ring-white/20" >
+                                Produit indisponible
+                </span>
+
+            </div>
+            )}
+        </div>
+
+          <div className="space-y-4 grid grid-rows-2 rounded-3xl bg-neutral-900/70 p-6 ring-1 ring-neutral-800">
+            <div>
+              <h2 className="text-white text-3xl font-semibold">Description</h2>
+              <p className="text-neutral-400">{p.description}</p>
+            </div>
+            <hr className='text-gray-500 mt-36 w-90'></hr>
+            <div className="flex items-end gap-3">
+              <span className="rounded-xl h-11 w-25 bg-white px-6 py-2 font-bold text-black">
+                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(p.price)}
+              </span>
+              <button disabled={!p.isAvailable} 
+                className="w-52 rounded-xl px-5 py-2.5 font-medium
+                    text-white bg-[#f79a2f] hover:bg-[#f79a2f]/90
+                    disabled:bg-neutral-700 disabled:text-neutral-300
+                    disabled:hover:bg-neutral-700 disabled:cursor-not-allowed"
+                >
+                Ajouter au panier
+            </button>
+
+            </div>
+          </div>
+        </div>
+        <RelatedProducts currentId={p.id} />
+      </div>
+    </main>
+
+  );
+}
+
+import RelatedProducts from '@/app/products/related-products';
