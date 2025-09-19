@@ -7,7 +7,7 @@ type User = {
   id?: string;
   email?: string;
   name?: string;
-  [key: string]: unknown;
+  [key: string]: any;
 };
 
 type AuthResponse = {
@@ -43,7 +43,7 @@ export default function Login() {
         throw new Error(msg || `Erreur ${res.status}`);
       }
 
-      const raw: unknown = await res.json();
+      const raw: any = await res.json();
 
       const isAuthResponse = (x: unknown): x is AuthResponse =>
         typeof x === 'object' &&
