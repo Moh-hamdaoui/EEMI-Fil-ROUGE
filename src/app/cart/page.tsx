@@ -43,9 +43,8 @@ export default function CartPage() {
 
         setProducts(isProductsApi(data) ? data.items : []);
       } catch (_err: unknown) {
-        const message =
-            _err instanceof Error ? _err.message : String(_err);
-            setError(`Impossible de charger les produits : ${message}`);
+          const message = _err instanceof Error ? _err.message : String(_err);
+          setError(`Impossible de charger les produits : ${message}`);
       } finally {
         setLoading(false);
       }
