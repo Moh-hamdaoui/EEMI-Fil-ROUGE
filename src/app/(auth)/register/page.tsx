@@ -3,9 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+type User = {
+  id?: string;
+  email?: string;
+  name?: string;
+  role?: 'admin' | 'user';
+  [key: string]: unknown;
+};
+
 type AuthResponse = {
   token: string;
-  user: any;
+  user: User;
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
@@ -21,7 +29,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -46,16 +54,28 @@ export default function Register() {
         throw new Error(msg || `Erreur ${res.status}`);
       }
 
-      const data: AuthResponse = await res.json();
+      const raw: unknown = await res.json();
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Type guard pour éviter toute fuite de any
+      const isAuthResponse = (x: unknown): x is AuthResponse =>
+        typeof x === 'object' &&
+        x !== null &&
+        typeof (x as { token?: unknown }).token === 'string' &&
+        typeof (x as { user?: unknown }).user === 'object' &&
+        (x as { user?: unknown }).user !== null;
+
+      if (!isAuthResponse(raw)) {
+        throw new Error('Réponse invalide du serveur');
+      }
+
+      localStorage.setItem('token', raw.token);
+      localStorage.setItem('user', JSON.stringify(raw.user));
 
       window.dispatchEvent(new Event('auth:change'));
-
       router.push('/');
-    } catch (err: any) {
-      setError(err?.message ?? 'Échec de la connexion');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Échec de la connexion';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -65,7 +85,7 @@ export default function Register() {
     <main className="min-h-screen bg-neutral-950 text-white">
       <div className="mx-auto flex max-w-4xl flex-col items-center px-4 pt-20">
         <h1 className="text-center text-5xl font-extrabold leading-tight md:text-7xl">
-          Je m'inscris
+          Je m&apos;inscris
         </h1>
 
         <form
@@ -78,7 +98,7 @@ export default function Register() {
               type="text"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
               placeholder="Nom"
               className="h-12 w-full rounded-2xl bg-neutral-800/90 px-4 text-center text-white placeholder-neutral-300 ring-1 ring-neutral-700 outline-none focus:ring-2 focus:ring-neutral-600"
             />
@@ -90,7 +110,7 @@ export default function Register() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               placeholder="E-mail"
               className="h-12 w-full rounded-2xl bg-neutral-800/90 px-4 text-center text-white placeholder-neutral-300 ring-1 ring-neutral-700 outline-none focus:ring-2 focus:ring-neutral-600"
             />
@@ -102,7 +122,7 @@ export default function Register() {
               type="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               placeholder="Mot de passe"
               className="h-12 w-full rounded-2xl bg-neutral-800/90 px-4 text-center text-white placeholder-neutral-300 ring-1 ring-neutral-700 outline-none focus:ring-2 focus:ring-neutral-600"
             />
@@ -112,7 +132,7 @@ export default function Register() {
             <input
               type="checkbox"
               checked={isAdmin}
-              onChange={(e) => setIsAdmin(e.target.checked)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsAdmin(e.target.checked)}
               className="h-5 w-5 rounded accent-[#f79a2f] cursor-pointer"
             />
             <span>Compte administrateur</span>
