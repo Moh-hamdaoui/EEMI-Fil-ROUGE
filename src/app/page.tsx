@@ -18,7 +18,7 @@ type ApiResponse = {
   items: ApiProduct[];
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://node-eemi.vercel.app';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 export default function Home() {
   const [products, setProducts] = useState<ApiProduct[]>([]);
@@ -31,7 +31,6 @@ export default function Home() {
         const res = await fetch(`${API_BASE}/api/products`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`API error ${res.status}`);
 
-        // Évite `any`: lis en `unknown` puis vérifie la forme
         const raw: unknown = await res.json();
 
         const isApiResponse = (x: unknown): x is ApiResponse =>
