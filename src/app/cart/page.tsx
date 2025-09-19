@@ -17,6 +17,8 @@ type Product = {
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://node-eemi.vercel.app';
 const BRAND = '#f79a2f';
 
+type ProductsApi = { items: Product[] };
+
 export default function CartPage() {
   const router = useRouter();
   const [items, setItems] = useState<Record<string, number>>({});
@@ -27,23 +29,32 @@ export default function CartPage() {
 
   useEffect(() => {
     setItems(getCart());
+
     (async () => {
       try {
         const r = await fetch(`${API_BASE}/api/products`, { cache: 'no-store' });
-        const data = await r.json(); 
-        setProducts(Array.isArray(data?.items) ? data.items : []);
-      } catch (e) {
+        if (!r.ok) throw new Error(`Erreur API ${r.status}`);
+        const data: unknown = await r.json();
+
+        const isProductsApi = (x: unknown): x is ProductsApi =>
+          typeof x === 'object' &&
+          x !== null &&
+          Array.isArray((x as { items?: unknown }).items);
+
+        setProducts(isProductsApi(data) ? data.items : []);
+      } catch (_err: unknown) {
         setError('Impossible de charger les produits');
-      } finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   const rows = useMemo(() => {
     const map = new Map(products.map(p => [p.id, p]));
-    return Object.entries(items).map(([id, qty]) => ({
-      product: map.get(id),
-      qty,
-    })).filter(r => !!r.product) as { product: Product; qty: number }[];
+    return Object.entries(items)
+      .map(([id, qty]) => ({ product: map.get(id), qty }))
+      .filter((r): r is { product: Product; qty: number } => Boolean(r.product));
   }, [items, products]);
 
   const total = rows.reduce((sum, r) => sum + r.product.price * r.qty, 0);
@@ -52,27 +63,41 @@ export default function CartPage() {
     setPlacing(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {        
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!token) {
         router.push("/login");
+        return; // 🔒 stop ici si pas connecté
       }
+
+      // asIdList est supposé renvoyer string[] ; si pas sûr, on garde une
+      // petite garde pour éviter "any".
+      const itemsList = asIdList();
+      const body: unknown = { items: itemsList };
+      if (!Array.isArray((body as { items: unknown }).items)) {
+        throw new Error('Panier invalide');
+      }
+
       const res = await fetch(`${API_BASE}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ items: asIdList() }),
+        body: JSON.stringify(body),
       });
+
       if (!res.ok) {
+        // on n’assume pas que c’est du JSON
         const msg = await res.text().catch(() => '');
         throw new Error(msg || `Erreur ${res.status}`);
       }
+
       clear();
       setItems({});
       alert('Commande créée');
-    } catch (e: any) {
-      setError(e?.message ?? 'Erreur lors de la commande');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur lors de la commande';
+      setError(message);
     } finally {
       setPlacing(false);
     }
