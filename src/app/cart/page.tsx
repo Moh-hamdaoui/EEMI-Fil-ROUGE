@@ -43,7 +43,7 @@ export default function CartPage() {
 
         setProducts(isProductsApi(data) ? data.items : []);
       } catch (_err: unknown) {
-        setError('Impossible de charger les produits');
+        const message = _err instanceof Error ? _err.message : 'Impossible de charger les produits';
       } finally {
         setLoading(false);
       }
@@ -66,11 +66,10 @@ export default function CartPage() {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       if (!token) {
         router.push("/login");
-        return; // 🔒 stop ici si pas connecté
+        return; 
       }
 
-      // asIdList est supposé renvoyer string[] ; si pas sûr, on garde une
-      // petite garde pour éviter "any".
+
       const itemsList = asIdList();
       const body: unknown = { items: itemsList };
       if (!Array.isArray((body as { items: unknown }).items)) {
@@ -87,7 +86,6 @@ export default function CartPage() {
       });
 
       if (!res.ok) {
-        // on n’assume pas que c’est du JSON
         const msg = await res.text().catch(() => '');
         throw new Error(msg || `Erreur ${res.status}`);
       }
