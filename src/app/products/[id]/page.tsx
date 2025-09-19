@@ -17,7 +17,6 @@ async function getProduct(id: string): Promise<Product> {
   if (!r.ok) throw new Error('Not found');
   const data: unknown = await r.json();
 
-  // Garde de type minimale
   const isProduct = (x: unknown): x is Product =>
     typeof x === 'object' &&
     x !== null &&
@@ -32,7 +31,6 @@ async function getProduct(id: string): Promise<Product> {
   return data;
 }
 
-// ⚠️ Ici on "await" params car ton PageProps attend un Promise
 export default async function ProductDetail({
   params,
 }: {
@@ -61,27 +59,14 @@ export default async function ProductDetail({
             )}
           </div>
 
-          <div className="space-y-4 rounded-3xl bg-neutral-900/70 p-6 ring-1 ring-neutral-800">
-            <div>
-              <h2 className="text-white text-3xl font-semibold">Description</h2>
-              <p className="text-neutral-400">{p.description}</p>
-            </div>
-
-            <hr className="border-neutral-800" />
-
-            <div className="flex items-end gap-3">
-              <span className="rounded-xl h-11 bg-white px-6 py-2 font-bold text-black inline-flex items-center">
-                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(p.price)}
-              </span>
-              <button
-                disabled={!p.isAvailable}
-                className="w-52 rounded-xl px-5 py-2.5 font-medium
-                           text-white bg-[#f79a2f] hover:bg-[#f79a2f]/90
-                           disabled:bg-neutral-700 disabled:text-neutral-300
-                           disabled:hover:bg-neutral-700 disabled:cursor-not-allowed"
-              >
-                Ajouter au panier
-              </button>
+          <div className="space-y-4 grid grid-rows-2 rounded-3xl bg-neutral-900/70 p-6 ring-1 ring-neutral-800">            <div> 
+            <h2 className="text-white text-3xl font-semibold">Description</h2> 
+              <p className="text-neutral-400">{p.description}</p> 
+            </div> 
+            <hr className='text-gray-500 mt-36 w-90'></hr> 
+            <div className="flex items-end gap-3"> 
+              <span className="rounded-xl flex h-11 w-25 bg-white px-6 py-2 font-bold text-black"> {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(p.price)} </span> 
+              <button disabled={!p.isAvailable} className="w-52 rounded-xl px-5 py-2.5 font-medium text-white bg-[#f79a2f] hover:bg-[#f79a2f]/90 disabled:bg-neutral-700 disabled:text-neutral-300 disabled:hover:bg-neutral-700 disabled:cursor-not-allowed" >Ajouter au panier</button>
             </div>
           </div>
         </div>
