@@ -16,7 +16,7 @@ type AuthResponse = {
   user: User;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE  ?? 'https://node-eemi.vercel.app';
 const BRAND = '#f79a2f';
 
 export default function Register() {

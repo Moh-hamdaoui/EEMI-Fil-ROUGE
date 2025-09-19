@@ -11,7 +11,7 @@ type ApiProduct = {
   isAvailable: boolean;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://node-eemi.vercel.app';
 
 export default function RelatedProducts({ currentId }: { currentId: string }) {
   const [products, setProducts] = useState<ApiProduct[]>([]);

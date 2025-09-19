@@ -6,7 +6,7 @@ export type Product = {
   available?: boolean;
 };
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE;
+const BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://node-eemi.vercel.app';
 
 export async function getProducts(): Promise<Product[]> {
   const res = await fetch(`${BASE}/api/products`, {

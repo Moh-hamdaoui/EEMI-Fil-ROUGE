@@ -13,7 +13,7 @@ type Product = {
   isAvailable: boolean;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://node-eemi.vercel.app';
 
 async function getProduct(id: string): Promise<Product> {
   const r = await fetch(`${API_BASE}/api/products/${id}`, { cache: 'no-store' });
