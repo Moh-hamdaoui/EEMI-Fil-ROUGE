@@ -45,7 +45,6 @@ export default function Login() {
 
       const raw: unknown = await res.json();
 
-      // Garde de type pour éviter toute fuite de any
       const isAuthResponse = (x: unknown): x is AuthResponse =>
         typeof x === 'object' &&
         x !== null &&
