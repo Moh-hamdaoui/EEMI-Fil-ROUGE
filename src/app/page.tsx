@@ -14,6 +14,10 @@ type ApiProduct = {
   isAvailable: boolean;
 };
 
+type ApiResponse = {
+  items: ApiProduct[];
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://node-eemi.vercel.app';
 
 export default function Home() {
@@ -26,10 +30,20 @@ export default function Home() {
       try {
         const res = await fetch(`${API_BASE}/api/products`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`API error ${res.status}`);
-        const data = await res.json();
-        setProducts(Array.isArray(data?.items) ? data.items : []);
-      } catch (e: any) {
-        setError(e?.message ?? 'Erreur inattendue');
+
+        // Évite `any`: lis en `unknown` puis vérifie la forme
+        const raw: unknown = await res.json();
+
+        const isApiResponse = (x: unknown): x is ApiResponse =>
+          typeof x === 'object' &&
+          x !== null &&
+          'items' in x &&
+          Array.isArray((x as { items: unknown }).items);
+
+        setProducts(isApiResponse(raw) ? raw.items : []);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Erreur inattendue';
+        setError(message);
       } finally {
         setLoading(false);
       }
